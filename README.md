@@ -15,4 +15,11 @@ $ npx wrangler d1 execute done --command "INSERT INTO  \"User\" (\"email\", \"na
 $ npx wrangler d1 execute done --command "INSERT INTO  \"User\" (\"email\", \"name\") VALUES
 ('jane@prisma.io', 'Jane Doe (Remote)');" --remote
 $ npx prisma generate
+$ npx wrangler d1 migrations create done create_task_table
+$ npx prisma migrate diff --from-empty --to-schema-datamodel ./prisma/schema.prisma --script --output migrations/0002_create_task_table.sql
+$ npx wrangler d1 migrations apply done --local
+$ npx wrangler d1 migrations apply done --remote
+$ npx wrangler d1 execute done --command "INSERT INTO  \"Task\" (\"name\") VALUES ('Read books');" --local
+$ npx wrangler d1 execute done --command "INSERT INTO  \"Task\" (\"name\") VALUES ('Read books');" --remote
+$ npx prisma generate
 ```
