@@ -23,6 +23,15 @@ export default {
 		const adapter = new PrismaD1(env.DB);
 		const prisma = new PrismaClient({ adapter });
 
+		if (request.method === 'PUT') {
+			const tasks = await prisma.task.findFirst({ where: { id: 1 } });
+			await prisma.task.update({
+				where: { id: 1 },
+				data: { finished: !tasks?.finished },
+			});
+			return new Response('Updated');
+		}
+
 		const users = await prisma.user.findMany();
 		const tasks = await prisma.task.findMany();
 		const result = JSON.stringify({ users, tasks });
