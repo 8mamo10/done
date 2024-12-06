@@ -24,7 +24,12 @@ export default {
 		const prisma = new PrismaClient({ adapter });
 
 		if (request.method === 'PUT') {
-			const tasks = await prisma.task.findFirst({ where: { id: 1 } });
+			const form = await request.formData();
+			const taskId = form.get('taskId');
+			if (taskId === null) {
+				return new Response('No taskId', { status: 400 });
+			}
+			const tasks = await prisma.task.findFirst({ where: { id: Number(taskId) } });
 			await prisma.task.update({
 				where: { id: 1 },
 				data: { finished: !tasks?.finished },
