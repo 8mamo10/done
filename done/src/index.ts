@@ -20,26 +20,53 @@ export interface Env {
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-		const adapter = new PrismaD1(env.DB);
-		const prisma = new PrismaClient({ adapter });
-
-		if (request.method === 'PUT') {
-			const form = await request.formData();
-			const taskId = form.get('taskId');
-			if (taskId === null) {
-				return new Response('No taskId', { status: 400 });
-			}
-			const tasks = await prisma.task.findFirst({ where: { id: Number(taskId) } });
-			await prisma.task.update({
-				where: { id: 1 },
-				data: { finished: !tasks?.finished },
+		try {
+			return handleRequest(request, env, ctx);
+		} catch (e) {
+			return new Response('Error thrown.', {
+				status: 500,
 			});
-			return new Response('Updated');
 		}
-
-		const users = await prisma.user.findMany();
-		const tasks = await prisma.task.findMany();
-		const result = JSON.stringify({ users, tasks });
-		return new Response(result);
 	},
 } satisfies ExportedHandler<Env>;
+
+async function handleRequest(request: Request, env: Env, ctr: ExecutionContext): Promise<Response> {
+	if (request.method === 'PUT') {
+		return handlePut(request, env);
+	} else if (request.method === 'GET') {
+		return handleGet(request, env);
+	}
+	return new Response('Unsupported', { status: 400 });
+}
+
+async function handlePut(request: Request, env: Env): Promise<Response> {
+	const adapter = new PrismaD1(env.DB);
+	const prisma = new PrismaClient({ adapter });
+
+	// TODO: [wrangler:err] TypeError: Parsing a Body as FormData requires a Content-Type header.
+	// without form-data
+	const form = await request.formData();
+	const taskId = form.get('taskId');
+	if (taskId === null || taskId === '') {
+		return new Response('No taskId', { status: 400 });
+	}
+	const task = await prisma.task.findFirst({ where: { id: Number(taskId) } });
+	if (task === null) {
+		return new Response(`TaskId=${taskId} not found`, { status: 404 });
+	}
+	await prisma.task.update({
+		where: { id: Number(taskId) },
+		data: { finished: !task?.finished },
+	});
+	return new Response(`TaskId=${taskId} was updated`);
+}
+
+async function handleGet(request: Request, env: Env): Promise<Response> {
+	const adapter = new PrismaD1(env.DB);
+	const prisma = new PrismaClient({ adapter });
+
+	const users = await prisma.user.findMany();
+	const tasks = await prisma.task.findMany();
+	const result = JSON.stringify({ users, tasks });
+	return new Response(result);
+}
