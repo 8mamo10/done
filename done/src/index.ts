@@ -43,8 +43,11 @@ async function handlePut(request: Request, env: Env): Promise<Response> {
 	const adapter = new PrismaD1(env.DB);
 	const prisma = new PrismaClient({ adapter });
 
-	// TODO: [wrangler:err] TypeError: Parsing a Body as FormData requires a Content-Type header.
-	// without form-data
+	// [wrangler:err] TypeError: Parsing a Body as FormData requires a Content-Type header.
+
+	if (request.headers.get('Content-Type') === null) {
+		return new Response('No Content-Type', { status: 400 });
+	}
 	const form = await request.formData();
 	const taskId = form.get('taskId');
 	if (taskId === null || taskId === '') {
