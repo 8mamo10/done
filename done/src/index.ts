@@ -44,7 +44,6 @@ async function handlePut(request: Request, env: Env): Promise<Response> {
 	const prisma = new PrismaClient({ adapter });
 
 	// [wrangler:err] TypeError: Parsing a Body as FormData requires a Content-Type header.
-
 	if (request.headers.get('Content-Type') === null) {
 		return new Response('No Content-Type', { status: 400 });
 	}
